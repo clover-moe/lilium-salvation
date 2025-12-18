@@ -258,6 +258,7 @@ static	cvar_t		*fs_microsoftstorepath;
 
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
+static	cvar_t		*fs_cdpath;
 static	cvar_t		*fs_gamedirvar;
 static	searchpath_t	*fs_searchpaths;
 static	int			fs_readCount;			// total bytes read
@@ -779,6 +780,21 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 			if ( fs_debug->integer )
 			{
 				Com_Printf( "FS_SV_FOpenFileRead (fs_gogpath): %s\n", ospath );
+			}
+
+			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
+			fsh[f].handleSync = qfalse;
+		}
+
+		if (!fsh[f].handleFiles.file.o && fs_cdpath->string[0])
+		{
+			// search cd path
+			ospath = FS_BuildOSPath( fs_cdpath->string, filename, "" );
+			ospath[strlen(ospath)-1] = '\0';
+
+			if ( fs_debug->integer )
+			{
+				Com_Printf( "FS_SV_FOpenFileRead (fs_cdpath): %s\n", ospath );
 			}
 
 			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
@@ -2533,7 +2549,7 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 	qboolean bDrop = qfalse;
 
 	// paths to search for mods
-	const char * const paths[] = { fs_basepath->string, fs_homepath->string, fs_steampath->string, fs_gogpath->string };
+	const char * const paths[] = { fs_basepath->string, fs_homepath->string, fs_steampath->string, fs_gogpath->string, fs_cdpath->string };
 
 	*listbuf = 0;
 	nMods = nTotal = 0;
@@ -3325,6 +3341,7 @@ static void FS_Startup( const char *gameName )
 	fs_packFiles = 0;
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
+	fs_cdpath = Cvar_Get ("fs_cdpath", "", CVAR_INIT );
 	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
 	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
 	homePath = Sys_DefaultHomePath();
@@ -3356,6 +3373,9 @@ static void FS_Startup( const char *gameName )
 	}
 
 	// add search path elements in reverse priority order
+	if (fs_cdpath->string[0]) {
+		FS_AddGameDirectory( fs_cdpath->string, gameName );
+	}
 	fs_microsoftstorepath = Cvar_Get("fs_microsoftstorepath", Sys_MicrosoftStorePath(), CVAR_INIT | CVAR_PROTECTED);
 	if (fs_microsoftstorepath->string[0]) {
 		FS_AddGameDirectory(fs_microsoftstorepath->string, gameName);
@@ -3388,6 +3408,9 @@ static void FS_Startup( const char *gameName )
 
 	// check for additional base game so mods can be based upon other mods
 	if ( fs_basegame->string[0] && Q_stricmp( fs_basegame->string, gameName ) ) {
+		if (fs_cdpath->string[0]) {
+			FS_AddGameDirectory(fs_cdpath->string, fs_basegame->string);
+		}
 		if (fs_gogpath->string[0]) {
 			FS_AddGameDirectory(fs_gogpath->string, fs_basegame->string);
 		}
@@ -3404,6 +3427,9 @@ static void FS_Startup( const char *gameName )
 
 	// check for additional game folder for mods
 	if ( fs_gamedirvar->string[0] && Q_stricmp( fs_gamedirvar->string, gameName ) ) {
+		if (fs_cdpath->string[0]) {
+			FS_AddGameDirectory(fs_cdpath->string, fs_gamedirvar->string);
+		}
 		if (fs_gogpath->string[0]) {
 			FS_AddGameDirectory(fs_gogpath->string, fs_gamedirvar->string);
 		}
@@ -4086,6 +4112,7 @@ void FS_InitFilesystem( void ) {
 	// we have to specially handle this, because normal command
 	// line variable sets don't happen until after the filesystem
 	// has already been initialized
+	Com_StartupVariable("fs_cdpath");
 	Com_StartupVariable("fs_basepath");
 	Com_StartupVariable("fs_homepath");
 	Com_StartupVariable("fs_game");
