@@ -7,7 +7,7 @@
 Lilium Salvation is compatible with with Dark Salvation (tested 1.0.6 and 1.0.7). Only the first level has been tested due to steep game difficulty. Dark Salvation is available at [itch.io](https://mangledeyestudios.itch.io/dark-salvation). The 1.0.7 patch for ealier version is available at [mangledeye.com/downloads](http://www.mangledeye.com/downloads/).
 
 Lilium Salvation is based on [Lilium Arena](https://github.com/clover-moe/lilium-arena).
-Lilium Salvation code commits: [compare/upstream...master](https://github.com/clover-moe/lilium-salvation/compare/upstream...master)
+Lilium Salvation code commits: [compare/lilium-arena...master](https://github.com/clover-moe/lilium-salvation/compare/lilium-arena...master)
 
 The engine support was reimplemented without the original source code and may not be network/demo compatible (though neither seem to work anyway). The source code for the Dark Salvation game, cgame, and ui code is not included as it has not been released; instead the QVMs in the data files are used.
 
